@@ -166,6 +166,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                     "Žádost o přihlášení",
                     style: Theme.of(context).textTheme.headline5,
                   ),
+                  if (req.auth != null) SizedBox(height: 30),
                   if (req.auth != null)
                     Text(
                       req.auth! ? "Schváleno" : "Zamítnuto",
@@ -180,21 +181,22 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                     "IP adresa: ${req.ip}",
                   ),
                   SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      ElevatedButton(
-                        style: ButtonStyle(),
-                        onPressed: () => confirmResolve(false, refetch!),
-                        child: Text("Zamítnout"),
-                      ),
-                      ElevatedButton(
-                        style: ButtonStyle(),
-                        onPressed: () => confirmResolve(true, refetch!),
-                        child: Text("Schválit"),
-                      ),
-                    ],
-                  ),
+                  if (req.auth == null)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ElevatedButton(
+                          style: ButtonStyle(),
+                          onPressed: () => confirmResolve(false, refetch!),
+                          child: Text("Zamítnout"),
+                        ),
+                        ElevatedButton(
+                          style: ButtonStyle(),
+                          onPressed: () => confirmResolve(true, refetch!),
+                          child: Text("Schválit"),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
