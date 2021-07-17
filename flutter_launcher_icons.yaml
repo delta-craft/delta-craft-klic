@@ -1,0 +1,8 @@
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/iOS.png"
+  image_path_android: "assets/icons/iOS.png"
+  image_path_ios: "assets/icons/iOS.png"
+  adaptive_icon_background: "assets/icons/Bkg.png" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground: "assets/icons/Frg.png" # only available for Android 8.0 devices and above
