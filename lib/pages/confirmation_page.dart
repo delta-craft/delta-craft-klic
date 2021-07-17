@@ -122,19 +122,21 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
           if (data == null) {
             return Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     "Není zde nic ke schválení",
                     style: Theme.of(context).textTheme.headline5,
                   ),
+                  SizedBox(height: 30),
                   Text(
                     "Nejprve se zkus připojit na server",
                     style: Theme.of(context).textTheme.headline6,
                   ),
+                  SizedBox(height: 30),
                   ElevatedButton(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -154,52 +156,48 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
 
           final date = f.format(req.authRequest);
 
-          return Column(
-            children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 20.0, horizontal: 20.0),
-                  child: Column(
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Žádost o přihlášení",
+                    style: Theme.of(context).textTheme.headline5,
+                  ),
+                  if (req.auth != null)
+                    Text(
+                      req.auth! ? "Schváleno" : "Zamítnuto",
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                  SizedBox(height: 30),
+                  Text(
+                    "Zažádáno: $date",
+                  ),
+                  SizedBox(height: 30),
+                  Text(
+                    "IP adresa: ${req.ip}",
+                  ),
+                  SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text(
-                        "Žádost o přihlášení",
-                        style: Theme.of(context).textTheme.headline5,
+                      ElevatedButton(
+                        style: ButtonStyle(),
+                        onPressed: () => confirmResolve(false, refetch!),
+                        child: Text("Zamítnout"),
                       ),
-                      if (req.auth != null)
-                        Text(
-                          req.auth! ? "Schváleno" : "Zamítnuto",
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                      SizedBox(height: 30),
-                      Text(
-                        "Zažádáno: $date",
-                      ),
-                      SizedBox(height: 30),
-                      Text(
-                        "IP adresa: ${req.ip}",
-                      ),
-                      SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          ElevatedButton(
-                            style: ButtonStyle(),
-                            onPressed: () => confirmResolve(false, refetch!),
-                            child: Text("Zamítnout"),
-                          ),
-                          ElevatedButton(
-                            style: ButtonStyle(),
-                            onPressed: () => confirmResolve(true, refetch!),
-                            child: Text("Schválit"),
-                          ),
-                        ],
+                      ElevatedButton(
+                        style: ButtonStyle(),
+                        onPressed: () => confirmResolve(true, refetch!),
+                        child: Text("Schválit"),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
