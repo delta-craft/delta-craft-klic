@@ -1,16 +1,63 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:deltacraft_klic/pages/confirmation_page.dart';
 import 'package:deltacraft_klic/pages/qr_scan_material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'models/colours.dart';
 import 'models/graphql-client.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-void main() async {
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // If you're going to use other Firebase services in the background, such as Firestore,
+  // make sure you call `initializeApp` before using other Firebase services.
+  await Firebase.initializeApp();
+  print('Handling a background message ${message.messageId}');
+}
+
+late AndroidNotificationChannel channel;
+late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  if (!kIsWeb) {
+    channel = const AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'Oznámení o přihlášení', // title
+      'This channel is used for important notifications.', // description
+      importance: Importance.high,
+    );
+
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    /// Create an Android Notification Channel.
+    ///
+    /// We use this channel in the `AndroidManifest.xml` file to override the
+    /// default FCM channel to enable heads up notifications.
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    /// Update the iOS foreground notification presentation options to allow
+    /// heads up notifications.
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
   final client = await getClient();
   runApp(MyApp(client));
 }
@@ -98,6 +145,8 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
+
+    await _scanQR();
   }
 
   Future _scanQR() async {
@@ -111,9 +160,7 @@ class _HomePageState extends State<HomePage> {
     final code = result?.code ?? "";
 
     if (code.length != 0) {
-      // TODO: Verify token
       await storage.write(key: "token", value: code);
-
       await Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -130,36 +177,30 @@ class _HomePageState extends State<HomePage> {
         title: Text("DeltaCraft Klíč"),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
+        child: AnimatedTextKit(
+          repeatForever: true,
+          animatedTexts: [
+            FadeAnimatedText(
               'Navštiv DeltaCraft Portal',
-              style: Theme.of(context).textTheme.headline5,
+              textStyle: TextStyle(fontSize: 26.0, fontWeight: FontWeight.bold),
+              duration: const Duration(seconds: 4),
             ),
-            SizedBox(
-              height: 20,
+            FadeAnimatedText(
+              'Otevři nastavení profilu',
+              textStyle: TextStyle(fontSize: 26.0, fontWeight: FontWeight.bold),
+              duration: const Duration(seconds: 4),
             ),
-            Text(
-              'Otevři nastavení svého profilu',
-              style: Theme.of(context).textTheme.headline5,
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Text(
+            FadeAnimatedText(
               'Naskenuj QR kód',
-              style: Theme.of(context).textTheme.headline5,
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              onPressed: _scanQR,
-              child: Text("Skenovat"),
+              textStyle: TextStyle(fontSize: 26.0, fontWeight: FontWeight.bold),
+              duration: const Duration(seconds: 4),
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.qr_code_scanner),
+        onPressed: _resolveLoggedIn,
       ),
     );
   }

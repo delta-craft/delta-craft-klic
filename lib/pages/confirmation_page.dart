@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:deltacraft_klic/main.dart';
+import 'package:deltacraft_klic/models/auth_request.dart';
 import 'package:deltacraft_klic/models/graphql-client.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -15,6 +19,35 @@ class ConfirmationPage extends StatefulWidget {
 }
 
 class _ConfirmationPageState extends State<ConfirmationPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    _resolveNotificationToken();
+  }
+
+  final updateToken = r"""
+    mutation UpdateFcmToken($token: String!) {
+      updateFcmToken(token: $token)
+    }
+  """;
+
+  Future _resolveNotificationToken() async {
+    if (Platform.isIOS) {
+      final resPerm = await FirebaseMessaging.instance.requestPermission();
+      if (resPerm.authorizationStatus != AuthorizationStatus.authorized) return;
+    }
+
+    final token = await FirebaseMessaging.instance.getToken();
+
+    if (token == null) return;
+
+    final client = widget.client;
+
+    await client.value.mutate(MutationOptions(
+        document: gql(updateToken), variables: {"token": token}));
+  }
+
   final f = new DateFormat('dd.MM.yyyy hh:mm');
   final storage = new FlutterSecureStorage();
 
@@ -117,10 +150,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
             );
           }
 
-          final date = f.format(new DateTime.fromMicrosecondsSinceEpoch(
-              data["authRequest"] * 1000));
-          final authConfirmed =
-              data["auth"] != null ? data["auth"] as bool : false;
+          final req = AuthRequest.fromJson(data);
+
+          final date = f.format(req.authRequest);
 
           return Column(
             children: [
@@ -134,9 +166,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                         "Žádost o přihlášení",
                         style: Theme.of(context).textTheme.headline5,
                       ),
-                      if (data["auth"] != null)
+                      if (req.auth != null)
                         Text(
-                          authConfirmed ? "Schváleno" : "Zamítnuto",
+                          req.auth! ? "Schváleno" : "Zamítnuto",
                           style: Theme.of(context).textTheme.headline6,
                         ),
                       SizedBox(height: 30),
@@ -145,7 +177,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                       ),
                       SizedBox(height: 30),
                       Text(
-                        "IP adresa: ${data["ip"]}",
+                        "IP adresa: ${req.ip}",
                       ),
                       SizedBox(height: 30),
                       Row(
