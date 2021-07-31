@@ -12,7 +12,7 @@ Future<ValueNotifier<GraphQLClient>> getClient() async {
   await initHiveForFlutter();
 
   final HttpLink httpLink = HttpLink(
-    'https://portal.deltacraft.eu/api/graphql',
+    'https://api.deltacraft.eu/graphql',
   );
 
   final AuthLink authLink = AuthLink(
