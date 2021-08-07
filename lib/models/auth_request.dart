@@ -5,7 +5,8 @@ class AuthRequest {
 
   AuthRequest.fromJson(Map<String, dynamic> json)
       : ip = json["ip"],
-        authRequest =
-            DateTime.fromMicrosecondsSinceEpoch(json["authRequest"] * 1000),
+        authRequest = json["authRequest"] is String
+            ? DateTime.parse(json["authRequest"])
+            : DateTime.fromMillisecondsSinceEpoch(json["authRequest"]),
         auth = json["auth"];
 }

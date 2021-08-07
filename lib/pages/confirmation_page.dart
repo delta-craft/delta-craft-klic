@@ -23,7 +23,9 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
   void initState() {
     super.initState();
 
-    _resolveNotificationToken();
+    try {
+      _resolveNotificationToken();
+    } catch (ex) {}
   }
 
   final updateToken = r"""
@@ -38,14 +40,17 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       if (resPerm.authorizationStatus != AuthorizationStatus.authorized) return;
     }
 
-    final token = await FirebaseMessaging.instance.getToken();
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
 
-    if (token == null) return;
+      final client = widget.client;
 
-    final client = widget.client;
-
-    await client.value.mutate(MutationOptions(
-        document: gql(updateToken), variables: {"token": token}));
+      await client.value.mutate(MutationOptions(
+          document: gql(updateToken), variables: {"token": token}));
+    } catch (ex) {
+      return;
+    }
   }
 
   final f = new DateFormat('dd.MM.yyyy hh:mm');
@@ -107,7 +112,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       body: Query(
         options: QueryOptions(
           document: gql(query),
-          pollInterval: Duration(seconds: 20),
+          pollInterval: Duration(seconds: 5),
         ),
         builder: (result,
             {Future<QueryResult> Function(FetchMoreOptions)? fetchMore,
